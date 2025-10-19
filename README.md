@@ -29,14 +29,21 @@ Lets take a look inside the `src` folder
  - In the root directory create a `.env` file and add the following env variables
     ```
         PORT=<port number of your choice>
+        FLIGHT_SEARCH_SERVICE=<Flight search service url/Where your flight search service is hosted>
     ```
     ex: 
     ```
         PORT=3000
+        FLIGHT_SEARCH_SERVICE=http://localhost:4000
     ```
  - go inside the `src` folder and execute the following command:
     ```
       npx sequelize init
+    ```
+- In the `src/config/config.json` file, update the database configurations as per your environment development/testing/production.
+ ```
+        Password: '<your_mysql_db_password>',
+        Database: '<your_mysql_database_name>',
     ```
  - By executing the above command you will get migrations and seeders folder along with a config.json inside the config folder. 
  - If you're setting up your development environment, then write the username of your db, password of your db and in dialect mention whatever db you are using for ex: mysql, mariadb etc

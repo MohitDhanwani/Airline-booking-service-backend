@@ -26,6 +26,7 @@ async function createBooking(data) {
     //api/v1/flights/:id/seats
     const response = await axios.patch(`${ServerConfig.FLIGHT_SEARCH_SERVICE}/api/v1/flights/${data.flightId}/seats`, {
       seats: data.noOfSeats,
+      decrease: data.decrease,
     });
     await transaction.commit();
     return booking;
@@ -46,7 +47,7 @@ async function makePayment(data) {
     const currentTime = new Date();
 
     if (currentTime - bookingTime > 300000) {
-      await bookingRepository.update(data.bookingId, {status: CANCELLED}, transaction);
+      await cancelBooking(data.bookingId);
       throw new AppError("Booking has expired", StatusCodes.BAD_REQUEST);
     }
 
@@ -61,6 +62,33 @@ async function makePayment(data) {
       data.bookingId,
       {
         status: BOOKED,
+      },
+      transaction
+    );
+    await transaction.commit();
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
+}
+
+async function cancelBooking(bookingId) {
+  const transaction = await db.sequelize.transaction();
+  try {
+    const bookingDetails = await bookingRepository.get(bookingId, transaction);
+    if (bookingDetails.status == CANCELLED) {
+      await transaction.commit();
+      return true;
+    }
+    //if booking is cancelled we need to restore the seats in that flight again
+    await axios.patch(`${ServerConfig.FLIGHT_SEARCH_SERVICE}/api/v1/flights/${bookingDetails.flightId}/seats`, {
+      seats: bookingDetails.noOfSeats,
+      decrease: Number(0),
+    });
+    await bookingRepository.update(
+      bookingId,
+      {
+        status: CANCELLED,
       },
       transaction
     );

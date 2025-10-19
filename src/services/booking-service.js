@@ -5,8 +5,8 @@ const { StatusCodes } = require("http-status-codes");
 const AppError = require("../utils/errors/app-error");
 const db = require("../models");
 
-const { Enums } = require("../utils/common");
-const { BOOKED, CANCELLED } = Enums.BOOKING_STATUS;
+const { BOOKING_STATUS } = require("../utils/common/enum");
+const { BOOKED, CANCELLED } = BOOKING_STATUS;
 
 const bookingRepository = new BookingRepository();
 
@@ -99,7 +99,19 @@ async function cancelBooking(bookingId) {
   }
 }
 
+async function cancelOldBookings(){
+  try {
+    const time = new Date( Date.now() - 1000 * 300 ); //time 5 minutes ago
+    const response = await bookingRepository.cancelOldBookings(time);
+    return response;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 module.exports = {
   createBooking,
   makePayment,
+  cancelBooking,
+  cancelOldBookings,
 };

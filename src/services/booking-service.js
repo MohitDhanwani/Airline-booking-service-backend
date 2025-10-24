@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { ServerConfig } = require("../config/");
+const { ServerConfig, Queue } = require("../config/");
 const { BookingRepository } = require("../repositories");
 const { StatusCodes } = require("http-status-codes");
 const AppError = require("../utils/errors/app-error");
@@ -65,6 +65,11 @@ async function makePayment(data) {
       },
       transaction
     );
+    await Queue.sendData({
+      recepientEmail: "soronej444@fogdiver.com",
+      subject: "Flight Booking Confirmation",
+      text: `Booking Successfully done for booking ${data.bookingId}`,
+    });
     await transaction.commit();
   } catch (error) {
     await transaction.rollback();
@@ -99,9 +104,9 @@ async function cancelBooking(bookingId) {
   }
 }
 
-async function cancelOldBookings(){
+async function cancelOldBookings() {
   try {
-    const time = new Date( Date.now() - 1000 * 300 ); //time 5 minutes ago
+    const time = new Date(Date.now() - 1000 * 300); //time 5 minutes ago
     const response = await bookingRepository.cancelOldBookings(time);
     return response;
   } catch (error) {
